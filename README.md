@@ -19,11 +19,8 @@
 ## Files
 - `target.ali` — target sequence (ATP8B4 + CDC50A), PIR format, multi-chain
 - `template.pdb` — 8OXC coordinates (chains A, B only; no HETATM)
-- `01_get_template_seq.py` — extracts resolved sequence from template.pdb (`8oxc.seq`)
-- `02_align.py` — align2d alignment of target vs. template (`alignment.ali`, `alignment.pap`)
-- `03_model.py` — AutoModel run: 10 models, `md_level=refine.slow`, `repeat_optimization=2`
-- `04_evaluate.py` — DOPE-based ranking of the 10 models
-- `05_annotate_dope_profile.py` — maps template-uncovered (ab initio) residue ranges onto the DOPE profile
+- .py files in Github 
+
 
 ## Pipeline (run in order)
 ```bash
@@ -32,9 +29,21 @@ export KEY_MODELLER='MODELIRANJE'
 
 python 01_get_template_seq.py
 python 02_align.py
-python 03_model.py
+python 03_model.py 
 python 04_evaluate.py
 python 05_annotate_dope_profile.py
+python 06_mutate_G395S.py
+python 08_check_phi_psi.py
+python 09_spatial_neighbors_G395.py
+python 10_check_g395s_clash.py
+python 11_rotamer_scan_G395S.py
+python 14_wt_vs_mut_asp815_distance.py
+python 15_map_atp8b4_to_atp8b1.py
+python 18_find_motif_resnums.py
+python 16_mutate_G457S_ATP8B1.py
+python 19_spatial_neighbors_G457_ATP8B1.py
+python 20_wt_vs_mut_asp893_distance_ATP8B1.py
+python 21_find_all_motifs.py
 ```
 
 ## Alignment summary
@@ -104,3 +113,39 @@ chain A unless noted):** 650, 651, 653, 813, 814, 815(Asp), 816, 819, 832,
 - Farthest: chi1 = -120°, distance = 2.91 Å
 - Closest: chi1 = 60°, distance = 1.65 Å
 - Cβ position does not change with chi1 (fixed by backbone geometry).
+
+## Control: same mutation on the ATP8B1 experimental structure
+
+To rule out the clash being a homology-modeling artifact, the equivalent
+G→S mutation was made directly on the ATP8B1 cryo-EM structure
+(`template.pdb`, 8OXC) rather than the ATP8B4 homology model.
+
+Residue numbers were located directly from the template sequence via
+motif search (DKTGT, GDGAND), not by offset arithmetic from the
+alignment — offset-based mapping gave incorrect numbers (444/825) and was
+discarded.
+
+### Files
+- `18_find_motif_resnums.py` — locates the actual ATP8B1 residue numbers
+  for the DKTGT and GDGAND motifs directly from `template.pdb`
+- `16_mutate_G457S_ATP8B1.py` — same mutate_model.py workflow as 06, run
+  on `template.pdb` chain A residue 457 (G→S) → `template_G457S.pdb`
+- `19_spatial_neighbors_G457_ATP8B1.py` — residues within 8 Å of Gly457 in
+  the WT template, independent of sequence position
+- `20_wt_vs_mut_asp893_distance_ATP8B1.py` — WT Gly457(CA)–Asp893 distance;
+  G457S Ser457 CB and OG distances to Asp893, reported separately
+
+### Results
+- DKTGT motif: D454-K455-T456-G457-T458 (ATP8B1 numbering)
+- GDGAND motif: G892-D893-G894-A895-N896-D897 (ATP8B1 numbering)
+- Spatial neighbors of Gly457 (WT template, ≤8 Å, chain A): 458, 456, 711,
+  460, 893(Asp), 455, 462, 910, 459, 454, 927, 911, 913, 892, 233, 929,
+  928, 463, 430, 709, 234, 708, 897(Asp), 912, 894, 891, 732, 926
+
+**Distances to Asp893:**
+- WT: CA(Gly457) – OD2(Asp893) = 3.47 Å
+- G457S: CB(Ser457) – OD2(Asp893) = 2.47 Å
+- G457S: OG(Ser457) – OD2(Asp893) = 2.66 Å
+
+For comparison, the ATP8B4 homology model gave: WT CA–Asp815 = 3.45 Å,
+G395S CB–Asp815 = 2.36 Å, G395S OG–Asp815 = 2.62 Å.
