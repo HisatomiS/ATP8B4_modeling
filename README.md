@@ -24,8 +24,6 @@
 
 ## Pipeline (run in order)
 ```bash
-conda activate scanpy
-export KEY_MODELLER='MODELIRANJE'
 
 python 01_get_template_seq.py
 python 02_align.py
