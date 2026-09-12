@@ -1,18 +1,4 @@
-Template.pdb: 8oxc.pdb
-ATP8B4 NP_079113.2,   CDC50A NP_060717.1  target.ali
-‘すべてのファイルを一つのフォルダに集約’
 
-MODELLER (管理者権限)
-
-wsl
-
-cd "/mnt/c/Program Files/Modeller10.8/ATP8B4_model"
-
-conda activate scanpy
-
-export KEY_MODELLER='MODELIRANJE'
-
-python -c "from modeller import *; print('ok')"
 
 python 01_get_template_seq.py
 cat 8oxc.seq
