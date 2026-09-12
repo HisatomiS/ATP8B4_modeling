@@ -14,34 +14,27 @@
 ## Environment
 - MODELLER 10.8, r13157
 - WSL2 (Ubuntu), conda env `scanpy`, Python 3.11
-- License key set via `export KEY_MODELLER='...'`
+- License key set via `export KEY_MODELLER='...'` (use your own key, not committed here)
 
 ## Files
 - `target.ali` — target sequence (ATP8B4 + CDC50A), PIR format, multi-chain
 - `template.pdb` — 8OXC coordinates (chains A, B only; no HETATM)
-- .py files in Github 
-
+- `01_get_template_seq.py` — extracts resolved sequence from template.pdb (`8oxc.seq`)
+- `02_align.py` — align2d alignment of target vs. template (`alignment.ali`, `alignment.pap`)
+- `03_model.py` — AutoModel run: 10 models, `md_level=refine.slow`, `repeat_optimization=2`
+- `04_evaluate.py` — DOPE-based ranking of the 10 models
+- `05_annotate_dope_profile.py` — maps template-uncovered (ab initio) residue ranges onto the DOPE profile
 
 ## Pipeline (run in order)
 ```bash
+conda activate scanpy
+export KEY_MODELLER='<your MODELLER license key>'
 
 python 01_get_template_seq.py
 python 02_align.py
-python 03_model.py 
+python 03_model.py
 python 04_evaluate.py
 python 05_annotate_dope_profile.py
-python 06_mutate_G395S.py
-python 08_check_phi_psi.py
-python 09_spatial_neighbors_G395.py
-python 10_check_g395s_clash.py
-python 11_rotamer_scan_G395S.py
-python 14_wt_vs_mut_asp815_distance.py
-python 15_map_atp8b4_to_atp8b1.py
-python 18_find_motif_resnums.py
-python 16_mutate_G457S_ATP8B1.py
-python 19_spatial_neighbors_G457_ATP8B1.py
-python 20_wt_vs_mut_asp893_distance_ATP8B1.py
-python 21_find_all_motifs.py
 ```
 
 ## Alignment summary
@@ -147,3 +140,55 @@ discarded.
 
 For comparison, the ATP8B4 homology model gave: WT CA–Asp815 = 3.45 Å,
 G395S CB–Asp815 = 2.36 Å, G395S OG–Asp815 = 2.62 Å.
+
+## Control: same mutation on ATP8A1 experimental structure
+
+**Structure used:** 6K7L, ATP8A1-CDC50 (E2P state class 2), cryo-EM.
+- Chain A: phospholipid-transporting ATPase, Q59EX4_HUMAN 1-1149
+- Chain C: cell cycle control protein 50A (CDC50A), CC50A_HUMAN 1-361
+- Non-standard residues present in the deposited structure (not carried
+  into `ATP8A1.pdb`, protein-only): ALF (tetrafluoroaluminate), MAN
+  (α-D-mannose), MG (magnesium ion), NAG (N-acetylglucosamine), Y01
+  (cholesterol hemisuccinate)
+
+Same approach repeated on a second homolog. Residue numbers auto-detected by direct motif search (no manual
+offset step needed). ATP8A1's PDB residue numbering was separately
+confirmed to match the canonical full-length sequence numbering.
+
+### Files
+- `22_motif_mutate_distance_pipeline.py` — single-script pipeline: reads
+  chain sequence directly from a PDB file, auto-detects DKTGT/GDGAND
+  motifs, mutates the DKTGT Gly → Ser, and reports WT vs. mutant distances
+  to nearby acidic residues found via unbiased spatial search
+
+### Results
+- DKTGT motif: D409-K410-T411-G412-T413 (ATP8A1 numbering)
+- GDGAND motif: G785-D786-G787-A788-N789-D790 (ATP8A1 numbering)
+- WT: CA(Gly412) – Asp786 = 3.21 Å
+- G412S: CB(Ser412) – Asp786 = 2.42 Å
+- G412S: OG(Ser412) – Asp786 = 2.72 Å
+
+## G→A variant, all three proteins
+
+Same DKTGT Gly mutated to Ala (smaller side chain than Ser) in all three
+structures, to test whether the clash is Ser-specific or general to any
+side-chain-bearing residue at this position.
+
+### Files
+- `23_GA_ATP8B1.py`, `24_GA_ATP8B4.py`, `25_GA_ATP8A1.py` — G→A version of
+  the mutate + distance-check pipeline, one per protein
+
+### Results
+
+| | ATP8B1 | ATP8B4 | ATP8A1 |
+|---|---|---|---|
+| DKTGT Gly | G457 | G395 | G412 |
+| GDGAND Asp | D893 | D815 | D786 |
+| WT: CA(Gly) – Asp | 3.47 Å | 3.45 Å | 3.21 Å |
+| G→S: CB(Ser) – Asp | 2.47 Å | 2.36 Å | 2.42 Å |
+| G→A: CB(Ala) – Asp | 2.41 Å | 2.28 Å | 2.37 Å |
+
+Cβ position is set by the backbone and is essentially unaffected by which
+side chain (Ser vs. Ala) is attached, consistent with the clash being a
+backbone/Cβ-level constraint rather than a property of a specific side
+chain.

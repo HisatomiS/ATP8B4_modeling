@@ -1,0 +1,39 @@
+Template.pdb: 8oxc.pdb
+ATP8B4 NP_079113.2,   CDC50A NP_060717.1  target.ali
+‘すべてのファイルを一つのフォルダに集約’
+
+MODELLER (管理者権限)
+
+wsl
+
+cd "/mnt/c/Program Files/Modeller10.8/ATP8B4_model"
+
+conda activate scanpy
+
+export KEY_MODELLER='MODELIRANJE'
+
+python -c "from modeller import *; print('ok')"
+
+python 01_get_template_seq.py
+cat 8oxc.seq
+python 02_align.py
+cat alignment.pap
+python 03_model.py 
+python 04_evaluate.py
+python 05_annotate_dope_profile.py
+python 06_mutate_G395S.py
+python 08_check_phi_psi.py
+python 09_spatial_neighbors_G395.py
+python 10_check_g395s_clash.py
+python 11_rotamer_scan_G395S.py
+python 14_wt_vs_mut_asp815_distance.py
+python 15_map_atp8b4_to_atp8b1.py
+python 18_find_motif_resnums.py
+python 16_mutate_G457S_ATP8B1.py
+python 19_spatial_neighbors_G457_ATP8B1.py
+python 20_wt_vs_mut_asp893_distance_ATP8B1.py
+python 21_find_all_motifs.py
+python 22_motif_mutate_distance_pipeline.py
+python 23_GA_ATP8B1.py
+python 24_GA_ATP8B4.py
+python 25_GA_ATP8A1.py
